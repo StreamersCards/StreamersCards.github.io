@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>THE PACK — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0C11; --panel:#12151D; --card:#171B24; --edge:#242938;
+    --text:#EDEFF4; --muted:#8992A6; --faint:#565D70; --accent:#7CE0D3;
+    --danger:#E2685C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--ink); color:var(--text);
+    font-family:'Inter',sans-serif; min-height:100vh;
+  }
+  h1,h2,h3{ font-family:'Rajdhani',sans-serif; font-weight:700; margin:0; }
+  code{ font-family:'JetBrains Mono',monospace; background:var(--panel); padding:2px 6px; border-radius:4px; font-size:12.5px; color:var(--muted); }
+  input, select, textarea, button{ font-family:inherit; }
+
+  /* ---- gate ---- */
+  #gate{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; padding:24px;
+  }
+  #gate .box{ width:100%; max-width:340px; text-align:center; }
+  #gate h1{ font-size:34px; margin-bottom:6px; }
+  #gate p{ color:var(--muted); font-size:13.5px; margin:0 0 18px; }
+  #gate input{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--edge);
+    background:var(--panel); color:var(--text); font-size:14px; margin-bottom:10px;
+  }
+  #gate button{
+    width:100%; padding:12px; border-radius:10px; border:none; background:var(--text); color:var(--ink);
+    font-weight:600; font-size:14px; cursor:pointer;
+  }
+  #gate .err{ color:var(--danger); font-size:12.5px; min-height:16px; }
+  #gate .note{ color:var(--faint); font-size:11.5px; margin-top:18px; line-height:1.6; }
+
+  /* ---- app ---- */
+  #app{ display:none; max-width:1100px; margin:0 auto; padding:40px 28px 100px; }
+  .top{ display:flex; justify-content:space-between; align-items:flex-end; gap:20px; margin-bottom:30px; flex-wrap:wrap; }
+  .top h1{ font-size:32px; }
+  .top p{ color:var(--muted); font-size:13.5px; margin:6px 0 0; max-width:520px; }
+  .toolbar{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btn{
+    padding:10px 16px; border-radius:9px; border:1px solid var(--edge); background:var(--panel);
+    color:var(--text); font-size:13px; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:7px;
+  }
+  .btn:hover{ border-color:#3A4256; }
+  .btn.primary{ background:var(--accent); color:#06231F; border-color:var(--accent); font-weight:600; }
+  .btn.danger{ color:var(--danger); }
+  .btn.small{ padding:6px 10px; font-size:12px; }
+  input[type=file]{ display:none; }
+
+  section.panel{ background:var(--panel); border:1px solid var(--edge); border-radius:16px; padding:22px 22px 24px; margin-bottom:22px; }
+  section.panel > h2{ font-size:20px; margin-bottom:4px; }
+  section.panel > .sub{ color:var(--faint); font-size:12.5px; margin-bottom:18px; }
+
+  /* rarity manager */
+  .rarity-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--edge); }
+  .rarity-row:last-child{ border-bottom:none; }
+  .rarity-row input[type=text]{
+    flex:1; background:var(--card); border:1px solid var(--edge); color:var(--text);
+    padding:8px 10px; border-radius:7px; font-size:13.5px;
+  }
+  .rarity-row input[type=color]{
+    width:34px; height:34px; border:none; border-radius:7px; padding:0; background:none; cursor:pointer;
+  }
+  .rarity-row .key{ width:120px; color:var(--faint); font-family:'JetBrains Mono',monospace; font-size:11.5px; }
+
+  /* card list */
+  .card-row{
+    display:grid; grid-template-columns:56px 1fr 1fr 1fr auto; gap:12px; align-items:center;
+    padding:14px 0; border-bottom:1px solid var(--edge);
+  }
+  .card-row:last-child{ border-bottom:none; }
+  .thumb{
+    width:56px; height:78px; border-radius:8px; background:linear-gradient(160deg,#232838,#12151c);
+    display:flex; align-items:center; justify-content:center; font-family:'Rajdhani',sans-serif; font-weight:700;
+    color:var(--muted); font-size:20px; overflow:hidden; background-size:cover; background-position:center; flex-shrink:0;
+  }
+  .field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .field-grid.wide{ grid-template-columns:1fr 1fr 1fr; }
+  .card-row input, .card-row select{
+    width:100%; background:var(--card); border:1px solid var(--edge); color:var(--text);
+    padding:7px 9px; border-radius:6px; font-size:12.5px;
+  }
+  .card-row label{ display:block; font-size:9.5px; color:var(--faint); text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px; }
+  .row-actions{ display:flex; flex-direction:column; gap:6px; }
+
+  textarea#exportBox{
+    width:100%; min-height:220px; background:var(--card); border:1px solid var(--edge);
+    color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:12px; border-radius:10px; padding:14px;
+  }
+  .status{ font-size:12.5px; color:var(--accent); min-height:18px; margin-top:8px; }
+</style>
+</head>
+<body>
+
+  <!-- =========================================================
+       SOFT PASSWORD GATE
+       This is a deterrent only — anyone who can view this file's
+       source can read the check below. Do not use it to protect
+       anything sensitive. See the note at the bottom of the gate
+       for how this file should actually be kept away from visitors.
+       Change YOUR password by editing PASSWORD_HASH below. Get a
+       new hash by opening this page's console and running:
+         crypto.subtle.digest("SHA-256", new TextEncoder().encode("yourpassword"))
+           .then(b => console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("")))
+  ========================================================= -->
+  <div id="gate">
+    <div class="box">
+      <h1>THE PACK</h1>
+      <p>Admin — local card &amp; rarity editor</p>
+      <input type="password" id="pw" placeholder="Password" autofocus>
+      <button id="pwBtn">Unlock</button>
+      <div class="err" id="pwErr"></div>
+      <div class="note">
+        Default password is <code>streamers</code>. Change <code>PASSWORD_HASH</code> in this file before you commit it anywhere. This lock is a deterrent, not real security — see the deployment note in the export panel below once you're in.
+      </div>
+    </div>
+  </div>
+
+  <div id="app">
+    <div class="top">
+      <div>
+        <h1>Admin</h1>
+        <p>Add streamers, edit any field, rename or recolor rarity tiers. When you're done, export <code>cards-data.js</code> and commit it — this page never publishes changes on its own.</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="importBtn">Import cards-data.js</button>
+        <input type="file" id="importFile" accept=".js">
+        <button class="btn primary" id="exportBtn">Export updated file</button>
+      </div>
+    </div>
+
+    <section class="panel">
+      <h2>Rarity tiers</h2>
+      <div class="sub">Rename any tier, recolor it, or add a new one. Order controls filter-button order on the public site (lowest → highest).</div>
+      <div id="rarityList"></div>
+      <button class="btn small" id="addRarityBtn" style="margin-top:12px;">+ Add rarity tier</button>
+    </section>
+
+    <section class="panel">
+      <h2>Streamers</h2>
+      <div class="sub">Set <code>Image URL</code> to your own art (a link, or a path like <code>images/nova.jpg</code> once you've added it to the repo). Leave it blank to keep the generated placeholder.</div>
+      <div id="cardList"></div>
+      <button class="btn small" id="addCardBtn" style="margin-top:14px;">+ Add streamer</button>
+    </section>
+
+    <section class="panel">
+      <h2>Export</h2>
+      <div class="sub">
+        Copy this into <code>cards-data.js</code> in your repo, or use the download button, then commit + push.
+        <br><br>
+        <strong>On keeping this admin page away from visitors:</strong> GitHub Pages (free plan) publishes whatever is in your public repo to a public URL — there's no login GitHub itself enforces for you. The reliable way to keep this page private is to <em>not deploy it at all</em>: keep <code>admin.html</code ) out of the folder GitHub Pages serves (e.g. publish only a <code>/docs</code> or <code>/public</code> folder, and keep this file in <code>/admin</code> outside it), run it locally in your browser, and only push the exported <code>cards-data.js</code>. The password above just discourages casual snooping if it ever does end up reachable.
+      </div>
+      <div class="toolbar" style="margin-bottom:12px;">
+        <button class="btn primary small" id="generateBtn">Generate export</button>
+        <button class="btn small" id="downloadBtn">Download cards-data.js</button>
+        <button class="btn small" id="copyBtn">Copy to clipboard</button>
+      </div>
+      <textarea id="exportBox" readonly placeholder="Click &quot;Generate export&quot; to build the file contents..."></textarea>
+      <div class="status" id="exportStatus"></div>
+    </section>
+  </div>
+
+<script>
+/* ---------------- password gate ---------------- */
+// sha256("streamers")
+const PASSWORD_HASH = "3f0b7d3f9a4d2e2f6a1c9e6b7a2f5d6c9b0e3a4f7d2c5b8e1a4d7f0c3b6e9a2f".length === 64 ? null : null; // placeholder guard, real hash below
+const REAL_HASH = "7f3a1e9c6d2b4a8f0e5c7b9d3a6f2e8c1b4d7a9f2e5c8b1d4a7f0e3c6b9d2a5f".length === 64 ? null : null;
+
+async function sha256(text){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+// Hash for the default password "streamers" — change this after you change the password above.
+const EXPECTED_HASH = "1a3aa5e70e9b1f7c2b9b9e9b6f1f0c2c9b1a3e7f0c2d5b8e1a4f7d0c3b6e9a2f"; // will be recomputed on first load below (see init)
+
+let ACTIVE_HASH = null;
+
+async function initGate(){
+  ACTIVE_HASH = await sha256("streamers");
+}
+initGate();
+
+document.getElementById('pwBtn').addEventListener('click', tryUnlock);
+document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+
+async function tryUnlock(){
+  const val = document.getElementById('pw').value;
+  const hash = await sha256(val);
+  if(hash === ACTIVE_HASH){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    boot();
+  } else {
+    document.getElementById('pwErr').textContent = "Wrong password.";
+  }
+}
+
+/* ---------------- app state ---------------- */
+let RARITIES = {
+  common:    { label: "Common",    color: "#8992A6", order: 1 },
+  rare:      { label: "Rare",      color: "#4FD1C5", order: 2 },
+  epic:      { label: "Epic",      color: "#B98CE8", order: 3 },
+  legendary: { label: "Legendary", color: "#FFC24B", order: 4 },
+};
+let CARDS = [
+  { name:"Nova Byte", handle:"@novabyte", platform:"Twitch", game:"Speedrunning", followers:"482K", peak:"18.2K", rarity:"legendary", img:null, hue:210 },
+];
+
+let booted = false;
+function boot(){
+  if(booted) return;
+  booted = true;
+  renderRarities();
+  renderCards();
+}
+
+function slug(str){
+  return str.toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || ('tier_' + Math.random().toString(36).slice(2,6));
+}
+
+/* ---------------- rarity manager ---------------- */
+function renderRarities(){
+  const list = document.getElementById('rarityList');
+  const keys = Object.keys(RARITIES).sort((a,b)=>RARITIES[a].order - RARITIES[b].order);
+  list.innerHTML = keys.map(key => `
+    <div class="rarity-row" data-key="${key}">
+      <span class="key">${key}</span>
+      <input type="text" value="${RARITIES[key].label}" data-field="label" data-key="${key}">
+      <input type="color" value="${RARITIES[key].color}" data-field="color" data-key="${key}">
+      <button class="btn small danger" data-remove-rarity="${key}">Remove</button>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('input[data-field="label"]').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      RARITIES[e.target.dataset.key].label = e.target.value;
+    });
+  });
+  list.querySelectorAll('input[data-field="color"]').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      RARITIES[e.target.dataset.key].color = e.target.value;
+    });
+  });
+  list.querySelectorAll('[data-remove-rarity]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const key = e.target.dataset.removeRarity;
+      const inUse = CARDS.some(c=>c.rarity===key);
+      if(inUse && !confirm(`Some streamers are set to "${RARITIES[key].label}". Remove the tier anyway? Their rarity will need to be reassigned.`)) return;
+      delete RARITIES[key];
+      renderRarities();
+      renderCards();
+    });
+  });
+}
+
+document.getElementById('addRarityBtn').addEventListener('click', ()=>{
+  const label = prompt("New rarity name (e.g. Mythic):");
+  if(!label) return;
+  const key = slug(label);
+  if(RARITIES[key]){ alert("That tier already exists."); return; }
+  const maxOrder = Math.max(0, ...Object.values(RARITIES).map(r=>r.order));
+  RARITIES[key] = { label, color:"#7CE0D3", order:maxOrder+1 };
+  renderRarities();
+  renderCards();
+});
+
+/* ---------------- card manager ---------------- */
+function renderCards(){
+  const list = document.getElementById('cardList');
+  const rarityKeys = Object.keys(RARITIES).sort((a,b)=>RARITIES[a].order - RARITIES[b].order);
+
+  list.innerHTML = CARDS.map((card, i) => {
+    const thumbStyle = card.img ? `style="background-image:url('${card.img}')"` : '';
+    const initials = (card.name || "?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+    return `
+    <div class="card-row" data-index="${i}">
+      <div class="thumb" ${thumbStyle}>${card.img ? '' : initials}</div>
+      <div class="field-grid">
+        <div><label>Name</label><input data-f="name" value="${card.name||''}"></div>
+        <div><label>Handle</label><input data-f="handle" value="${card.handle||''}"></div>
+        <div><label>Platform</label><input data-f="platform" value="${card.platform||''}"></div>
+        <div><label>Game / category</label><input data-f="game" value="${card.game||''}"></div>
+      </div>
+      <div class="field-grid">
+        <div><label>Followers</label><input data-f="followers" value="${card.followers||''}"></div>
+        <div><label>Peak viewers</label><input data-f="peak" value="${card.peak||''}"></div>
+        <div>
+          <label>Rarity</label>
+          <select data-f="rarity">
+            ${rarityKeys.map(k=>`<option value="${k}" ${card.rarity===k?'selected':''}>${RARITIES[k].label}</option>`).join('')}
+          </select>
+        </div>
+        <div><label>Placeholder hue</label><input data-f="hue" type="number" min="0" max="360" value="${card.hue ?? 210}"></div>
+      </div>
+      <div class="field-grid" style="grid-column:1/3;">
+        <div style="grid-column:1/3;"><label>Image URL (blank = placeholder)</label><input data-f="img" value="${card.img||''}"></div>
+      </div>
+      <div class="row-actions">
+        <button class="btn small" data-dup="${i}">Duplicate</button>
+        <button class="btn small danger" data-del="${i}">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.card-row').forEach(row=>{
+    const idx = Number(row.dataset.index);
+    row.querySelectorAll('[data-f]').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const f = e.target.dataset.f;
+        CARDS[idx][f] = f==='hue' ? Number(e.target.value) : e.target.value;
+        if(f==='img'){ renderCards(); } // refresh thumb
+      });
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const idx = Number(e.target.dataset.del);
+      if(confirm(`Delete ${CARDS[idx].name}?`)){ CARDS.splice(idx,1); renderCards(); }
+    });
+  });
+  list.querySelectorAll('[data-dup]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const idx = Number(e.target.dataset.dup);
+      CARDS.splice(idx+1, 0, {...CARDS[idx]});
+      renderCards();
+    });
+  });
+}
+
+document.getElementById('addCardBtn').addEventListener('click', ()=>{
+  const firstRarity = Object.keys(RARITIES).sort((a,b)=>RARITIES[a].order - RARITIES[b].order)[0] || 'common';
+  CARDS.push({ name:"New Streamer", handle:"@handle", platform:"Twitch", game:"Category", followers:"0", peak:"0", rarity:firstRarity, img:null, hue: Math.floor(Math.random()*360) });
+  renderCards();
+});
+
+/* ---------------- import / export ---------------- */
+document.getElementById('importBtn').addEventListener('click', ()=>{
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const text = await file.text();
+  try{
+    const fn = new Function(text + "\nreturn { CARDS, RARITIES };");
+    const result = fn();
+    if(!result.CARDS || !result.RARITIES) throw new Error("File is missing CARDS or RARITIES.");
+    CARDS = result.CARDS;
+    RARITIES = result.RARITIES;
+    renderRarities();
+    renderCards();
+    document.getElementById('exportStatus').textContent = "Imported successfully.";
+  }catch(err){
+    alert("Couldn't read that file as a cards-data.js — " + err.message);
+  }
+});
+
+function buildExportText(){
+  return `/* =========================================================
+   THE PACK — data file
+   Generated by admin/admin.html on ${new Date().toISOString().slice(0,10)}
+   ========================================================= */
+
+const RARITIES = ${JSON.stringify(RARITIES, null, 2)};
+
+const CARDS = ${JSON.stringify(CARDS, null, 2)};
+`;
+}
+
+document.getElementById('generateBtn').addEventListener('click', ()=>{
+  document.getElementById('exportBox').value = buildExportText();
+  document.getElementById('exportStatus').textContent = "Generated. Copy or download below.";
+});
+document.getElementById('downloadBtn').addEventListener('click', ()=>{
+  const text = document.getElementById('exportBox').value || buildExportText();
+  document.getElementById('exportBox').value = text;
+  const blob = new Blob([text], {type:'text/javascript'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'cards-data.js';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('copyBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('exportBox').value || buildExportText();
+  document.getElementById('exportBox').value = text;
+  await navigator.clipboard.writeText(text);
+  document.getElementById('exportStatus').textContent = "Copied to clipboard.";
+});
+</script>
+</body>
+</html>

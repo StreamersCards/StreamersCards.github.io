@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE PACK — Streamer Card Binder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0C11;
+    --panel:#12151D;
+    --card:#181C26;
+    --card-edge:#242938;
+    --text:#EDEFF4;
+    --muted:#8992A6;
+    --faint:#565D70;
+
+    --holo-a:#7CE0D3;
+    --holo-b:#C792EA;
+    --holo-c:#FFD166;
+    --holo-d:#FF6FB0;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, #161A24 0%, transparent 55%),
+      radial-gradient(circle at 85% 15%, #14181F 0%, transparent 50%),
+      var(--ink);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:inherit;}
+
+  .hero{ max-width:1180px; margin:0 auto; padding:64px 32px 28px; }
+  .hero-eyebrow{
+    display:flex; align-items:center; gap:10px;
+    font-family:'JetBrains Mono',monospace; font-size:12px;
+    letter-spacing:.14em; color:var(--faint); text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .hero-eyebrow::before{
+    content:""; width:7px;height:7px;border-radius:50%;
+    background:var(--holo-a); box-shadow:0 0 10px 2px var(--holo-a);
+  }
+  .hero h1{
+    font-family:'Rajdhani',sans-serif; font-weight:700;
+    font-size:clamp(40px,7vw,84px); line-height:.95; letter-spacing:.01em;
+    margin:0 0 18px;
+    background:linear-gradient(100deg,#fff 30%, #b9c2d6 60%, #fff 90%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero p{ max-width:560px; color:var(--muted); font-size:16px; line-height:1.6; margin:0 0 30px; }
+  .stat-strip{ display:flex; gap:36px; flex-wrap:wrap; border-top:1px solid var(--card-edge); padding-top:20px; }
+  .stat-strip div{display:flex;flex-direction:column;gap:4px;}
+  .stat-strip .num{ font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:600; }
+  .stat-strip .lbl{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); }
+
+  .filter-bar{ max-width:1180px; margin:0 auto; padding:0 32px 8px; display:flex; gap:10px; flex-wrap:wrap; }
+  .pill{
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.06em;
+    padding:9px 16px; border-radius:100px; border:1px solid var(--card-edge);
+    background:var(--panel); color:var(--muted); cursor:pointer;
+    transition:border-color .2s ease, color .2s ease, background .2s ease;
+  }
+  .pill:hover{color:var(--text); border-color:#3A4256;}
+  .pill:focus-visible{outline:2px solid var(--holo-a); outline-offset:2px;}
+  .pill.active{ color:var(--ink); background:var(--text); border-color:var(--text); }
+
+  .binder{
+    max-width:1180px; margin:0 auto; padding:28px 32px 100px;
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr));
+    gap:26px; perspective:1200px;
+  }
+  .slot{ display:flex; justify-content:center; transition:opacity .35s ease, transform .35s ease; }
+  .slot.hidden{ display:none; }
+
+  .card{
+    --rx:0deg; --ry:0deg; --mx:50%; --my:50%;
+    position:relative; width:100%; max-width:260px; aspect-ratio:5/7;
+    border-radius:16px; background:linear-gradient(160deg,#1D212C,#12151C);
+    border:1px solid var(--card-edge); overflow:hidden; cursor:pointer;
+    transform:rotateX(var(--rx)) rotateY(var(--ry)); transform-style:preserve-3d;
+    transition:transform .5s cubic-bezier(.22,1,.36,1), box-shadow .5s ease;
+    box-shadow:0 10px 30px -14px rgba(0,0,0,.7);
+  }
+  .card:hover, .card:focus-visible{ box-shadow:0 22px 44px -18px rgba(0,0,0,.85); }
+  .card:focus-visible{ outline:2px solid var(--holo-a); outline-offset:3px; }
+
+  .card-art{ position:absolute; inset:0; background-size:cover; background-position:center; }
+  .card-shade{
+    position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(8,9,13,.94) 0%, rgba(8,9,13,.55) 40%, rgba(8,9,13,0) 62%);
+  }
+  .card-holo{
+    position:absolute; inset:0; mix-blend-mode:color-dodge; opacity:0;
+    background:linear-gradient(115deg, transparent 20%, var(--holo-a) 32%, var(--holo-d) 40%,
+      var(--holo-c) 48%, var(--holo-b) 56%, var(--holo-a) 64%, transparent 76%);
+    background-size:250% 250%; background-position:var(--mx) var(--my);
+    transition:opacity .4s ease;
+  }
+  .card:hover .card-holo, .card:focus-visible .card-holo{ opacity:.55; }
+  .card-glare{
+    position:absolute; inset:0; opacity:0;
+    background:radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.35), transparent 45%);
+    transition:opacity .4s ease; mix-blend-mode:overlay;
+  }
+  .card:hover .card-glare, .card:focus-visible .card-glare{ opacity:1; }
+
+  .card-top{ position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-start; padding:12px 12px 0; }
+  .rarity-tag{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
+    padding:4px 8px; border-radius:5px; background:rgba(10,11,15,.55); backdrop-filter:blur(3px);
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .platform-badge{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.06em;
+    padding:4px 7px; border-radius:5px; background:rgba(10,11,15,.55); color:var(--muted);
+    border:1px solid rgba(255,255,255,.08);
+  }
+
+  .card-bottom{ position:absolute; left:0; right:0; bottom:0; padding:14px 14px 16px; }
+  .card-game{
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--holo-a); margin-bottom:6px; display:block;
+  }
+  .card-name{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:24px; line-height:1; margin:0 0 2px; }
+  .card-handle{ font-size:12px; color:var(--muted); margin:0 0 10px; }
+  .card-stats{ display:flex; gap:14px; border-top:1px solid rgba(255,255,255,.08); padding-top:9px; }
+  .card-stats div{display:flex; flex-direction:column; gap:1px;}
+  .card-stats .v{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; }
+  .card-stats .k{ font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
+
+  footer{
+    max-width:1180px; margin:0 auto; padding:0 32px 70px; color:var(--faint); font-size:13px;
+    border-top:1px solid var(--card-edge); padding-top:24px;
+  }
+  footer code{ background:var(--panel); padding:2px 6px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); }
+
+  @media (prefers-reduced-motion: reduce){
+    .card{ transition:none; }
+    .card-holo, .card-glare{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+  <section class="hero">
+    <div class="hero-eyebrow">Live Roster · Season 01</div>
+    <h1>THE PACK</h1>
+    <p>A binder of the streamers on our radar this season. Tap a card to see it catch the light — every card in the pack has a foil variant hiding under your cursor.</p>
+    <div class="stat-strip">
+      <div><span class="num" id="stat-total">00</span><span class="lbl">Cards in pack</span></div>
+      <div><span class="num" id="stat-top-tier">00</span><span class="lbl" id="stat-top-tier-lbl">Top tier pulls</span></div>
+      <div><span class="num" id="stat-tiers">0</span><span class="lbl">Rarity tiers</span></div>
+    </div>
+  </section>
+
+  <div class="filter-bar" id="filterBar"></div>
+
+  <main class="binder" id="binder"></main>
+
+  <footer>
+    Card data lives in <code>cards-data.js</code>. Manage streamers and rarity tiers with the local admin tool, then export and commit the updated file — this page never edits itself.
+  </footer>
+
+<script src="cards-data.js"></script>
+<script>
+const rarityKeys = Object.keys(RARITIES).sort((a,b)=>RARITIES[a].order - RARITIES[b].order);
+const topTierKey = rarityKeys[rarityKeys.length-1];
+
+function placeholderArt(card){
+  const initials = card.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+  const h = card.hue ?? 210;
+  return `
+    <div style="position:absolute;inset:0;
+      background:
+        radial-gradient(circle at 30% 20%, hsla(${h},70%,55%,.35), transparent 55%),
+        linear-gradient(160deg, hsl(${h} 35% 14%), hsl(${(h+40)%360} 30% 8%));
+      display:flex;align-items:center;justify-content:center;">
+      <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:76px;
+        color:hsla(${h},60%,85%,.18);letter-spacing:.02em;">${initials}</span>
+    </div>`;
+}
+
+function cardTemplate(card, i){
+  const art = card.img
+    ? `<div class="card-art" style="background-image:url('${card.img}')"></div>`
+    : placeholderArt(card);
+  const rarity = RARITIES[card.rarity] || RARITIES[rarityKeys[0]];
+
+  return `
+  <div class="slot" data-rarity="${card.rarity}">
+    <article class="card" tabindex="0" data-index="${i}" aria-label="${card.name}, ${rarity.label} rarity, ${card.game} streamer">
+      ${art}
+      <div class="card-shade"></div>
+      <div class="card-holo"></div>
+      <div class="card-glare"></div>
+      <div class="card-top">
+        <span class="rarity-tag" style="color:${rarity.color}">${rarity.label}</span>
+        <span class="platform-badge">${card.platform}</span>
+      </div>
+      <div class="card-bottom">
+        <span class="card-game">${card.game}</span>
+        <h3 class="card-name">${card.name}</h3>
+        <p class="card-handle">${card.handle}</p>
+        <div class="card-stats">
+          <div><span class="v">${card.followers}</span><span class="k">Followers</span></div>
+          <div><span class="v">${card.peak}</span><span class="k">Peak viewers</span></div>
+        </div>
+      </div>
+    </article>
+  </div>`;
+}
+
+const binder = document.getElementById('binder');
+binder.innerHTML = CARDS.map(cardTemplate).join('');
+
+document.getElementById('stat-total').textContent = String(CARDS.length).padStart(2,'0');
+document.getElementById('stat-top-tier').textContent =
+  String(CARDS.filter(c=>c.rarity===topTierKey).length).padStart(2,'0');
+document.getElementById('stat-top-tier-lbl').textContent = `${RARITIES[topTierKey].label} pulls`;
+document.getElementById('stat-tiers').textContent = rarityKeys.length;
+
+/* filter pills, ordered lowest -> highest rarity */
+const filterBar = document.getElementById('filterBar');
+const tiers = ["all", ...rarityKeys.slice().reverse()];
+filterBar.innerHTML = tiers.map((t,i)=>
+  `<button class="pill ${i===0?'active':''}" data-tier="${t}">${t==='all'?'All cards':RARITIES[t].label}</button>`
+).join('');
+
+filterBar.addEventListener('click', e=>{
+  const btn = e.target.closest('.pill');
+  if(!btn) return;
+  filterBar.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const tier = btn.dataset.tier;
+  document.querySelectorAll('.slot').forEach(slot=>{
+    slot.classList.toggle('hidden', tier!=='all' && slot.dataset.rarity!==tier);
+  });
+});
+
+/* holo tilt interaction */
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+document.querySelectorAll('.card').forEach(card=>{
+  if(prefersReduced) return;
+
+  function updateFromPoint(x, y, rect){
+    const px = (x - rect.left) / rect.width;
+    const py = (y - rect.top) / rect.height;
+    const ry = (px - 0.5) * 18;
+    const rx = (0.5 - py) * 18;
+    card.style.setProperty('--rx', rx.toFixed(2)+'deg');
+    card.style.setProperty('--ry', ry.toFixed(2)+'deg');
+    card.style.setProperty('--mx', (px*100).toFixed(1)+'%');
+    card.style.setProperty('--my', (py*100).toFixed(1)+'%');
+  }
+
+  card.addEventListener('pointermove', e=>{
+    updateFromPoint(e.clientX, e.clientY, card.getBoundingClientRect());
+  });
+  card.addEventListener('pointerleave', ()=>{
+    card.style.setProperty('--rx','0deg');
+    card.style.setProperty('--ry','0deg');
+    card.style.setProperty('--mx','50%');
+    card.style.setProperty('--my','50%');
+  });
+  card.addEventListener('focus', ()=>{
+    card.style.setProperty('--mx','50%');
+    card.style.setProperty('--my','30%');
+  });
+});
+</script>
+</body>
+</html>
