@@ -101,17 +101,7 @@
 </head>
 <body>
 
-  <!-- =========================================================
-       SOFT PASSWORD GATE
-       This is a deterrent only — anyone who can view this file's
-       source can read the check below. Do not use it to protect
-       anything sensitive. See the note at the bottom of the gate
-       for how this file should actually be kept away from visitors.
-       Change YOUR password by editing PASSWORD_HASH below. Get a
-       new hash by opening this page's console and running:
-         crypto.subtle.digest("SHA-256", new TextEncoder().encode("yourpassword"))
-           .then(b => console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("")))
-  ========================================================= -->
+
   <div id="gate">
     <div class="box">
       <h1>THE PACK</h1>
@@ -120,7 +110,7 @@
       <button id="pwBtn">Unlock</button>
       <div class="err" id="pwErr"></div>
       <div class="note">
-        Default password is <code>streamers</code>. Change <code>PASSWORD_HASH</code> in this file before you commit it anywhere. This lock is a deterrent, not real security — see the deployment note in the export panel below once you're in.
+        Default password is <code>streamers</code>. Change <code>ACTIVE_HASH</code> in this file before committing.
       </div>
     </div>
   </div>
@@ -156,8 +146,6 @@
       <h2>Export</h2>
       <div class="sub">
         Copy this into <code>cards-data.js</code> in your repo, or use the download button, then commit + push.
-        <br><br>
-        <strong>On keeping this admin page away from visitors:</strong> GitHub Pages (free plan) publishes whatever is in your public repo to a public URL — there's no login GitHub itself enforces for you. The reliable way to keep this page private is to <em>not deploy it at all</em>: keep <code>admin.html</code ) out of the folder GitHub Pages serves (e.g. publish only a <code>/docs</code> or <code>/public</code> folder, and keep this file in <code>/admin</code> outside it), run it locally in your browser, and only push the exported <code>cards-data.js</code>. The password above just discourages casual snooping if it ever does end up reachable.
       </div>
       <div class="toolbar" style="margin-bottom:12px;">
         <button class="btn primary small" id="generateBtn">Generate export</button>
@@ -171,24 +159,12 @@
 
 <script>
 /* ---------------- password gate ---------------- */
-// sha256("streamers")
-const PASSWORD_HASH = "3f0b7d3f9a4d2e2f6a1c9e6b7a2f5d6c9b0e3a4f7d2c5b8e1a4d7f0c3b6e9a2f".length === 64 ? null : null; // placeholder guard, real hash below
-const REAL_HASH = "7f3a1e9c6d2b4a8f0e5c7b9d3a6f2e8c1b4d7a9f2e5c8b1d4a7f0e3c6b9d2a5f".length === 64 ? null : null;
+let ACTIVE_HASH = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3";
 
 async function sha256(text){
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
-
-// Hash for the default password "streamers" — change this after you change the password above.
-const EXPECTED_HASH = "1a3aa5e70e9b1f7c2b9b9e9b6f1f0c2c9b1a3e7f0c2d5b8e1a4f7d0c3b6e9a2f"; // will be recomputed on first load below (see init)
-
-let ACTIVE_HASH = null;
-
-async function initGate(){
-  ACTIVE_HASH = await sha256("streamers");
-}
-initGate();
 
 document.getElementById('pwBtn').addEventListener('click', tryUnlock);
 document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
