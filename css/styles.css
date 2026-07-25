@@ -372,6 +372,10 @@ button.rarity-chip[data-selected="true"] {
   z-index: 50;
 }
 
+.modal-backdrop[hidden] {
+  display: none;
+}
+
 .modal {
   --rarity-color: var(--accent);
   background: var(--bg-elevated);
