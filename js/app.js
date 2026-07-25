@@ -355,10 +355,47 @@
     }
   }
 
+  // Spawns 3D spatial particle sparkles when a face-down card is flipped over
+  function spawnSparkleBurst(x, y, color) {
+    const burstContainer = document.createElement("div");
+    burstContainer.className = "particles";
+    document.body.appendChild(burstContainer);
+    
+    for (let i = 0; i < 15; i++) {
+      const p = document.createElement("div");
+      p.className = "particle";
+      p.style.background = color;
+      p.style.left = `${x}px`;
+      p.style.top = `${y}px`;
+      p.style.width = `${Math.random() * 5 + 3}px`;
+      p.style.height = p.style.width;
+      
+      p.style.animation = "none";
+      p.style.transform = "translate(0, 0) scale(1)";
+      p.style.transition = "transform 0.8s cubic-bezier(0.1, 0.8, 0.3, 1), opacity 0.8s ease";
+      
+      burstContainer.appendChild(p);
+      
+      // Force element layout recalculation before starting translate properties
+      p.offsetHeight;
+      
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 120 + 40;
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance;
+      
+      p.style.transform = `translate(${tx}px, ${ty}px) scale(0)`;
+      p.style.opacity = "0";
+    }
+    
+    setTimeout(() => {
+      burstContainer.remove();
+    }, 900);
+  }
+
   function openBoosterPack() {
     els.boosterPack.className = "booster-pack shake";
     
-    // Step 1: Pack shakes violently, then splits
     setTimeout(() => {
       els.boosterPack.className = "booster-pack rip-open";
       
@@ -402,9 +439,18 @@
           `;
 
           // Clicking triggers the dynamic 3D rotation flip reveal
-          wrapper.addEventListener("click", () => {
-            wrapper.classList.toggle("flipped");
-            document.documentElement.style.setProperty("--ambient-color", r.color);
+          wrapper.addEventListener("click", (e) => {
+            if (!wrapper.classList.contains("flipped")) {
+              wrapper.classList.add("flipped");
+              
+              // Coordinates sparkle explosion over the card's exact container boundaries
+              const rect = wrapper.getBoundingClientRect();
+              const centerX = rect.left + window.scrollX + rect.width / 2;
+              const centerY = rect.top + window.scrollY + rect.height / 2;
+              spawnSparkleBurst(centerX, centerY, r.color);
+
+              document.documentElement.style.setProperty("--ambient-color", r.color);
+            }
           });
 
           els.boosterResults.appendChild(wrapper);
