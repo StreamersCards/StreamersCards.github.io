@@ -98,6 +98,15 @@
     return Object.entries(RARITIES).sort((a, b) => (b[1].weight || 0) - (a[1].weight || 0));
   }
 
+  /* ---------- rendering: hero stats ---------- */
+
+  function renderHeroStats() {
+    const totalCards = COLLECTIONS.reduce((sum, c) => sum + c.cards.length, 0);
+    document.getElementById("stat-cards").textContent = totalCards;
+    document.getElementById("stat-collections").textContent = COLLECTIONS.length;
+    document.getElementById("stat-rarities").textContent = Object.keys(RARITIES).length;
+  }
+
   /* ---------- rendering: legend ---------- */
 
   function renderLegend() {
@@ -112,18 +121,42 @@
 
   /* ---------- rendering: home (collections) ---------- */
 
+  function topRarityInCollection(col) {
+    return col.cards.reduce((top, c) => {
+      const r = rarityOf(c.rarity);
+      return !top || (r.weight || 0) > (rarityOf(top).weight || 0) ? c.rarity : top;
+    }, null);
+  }
+
+  function renderRarityDistribution(col) {
+    const counts = {};
+    col.cards.forEach((c) => { counts[c.rarity] = (counts[c.rarity] || 0) + 1; });
+    return allRaritiesSorted()
+      .filter(([key]) => counts[key])
+      .map(([key, r]) => `<span class="dist-seg" style="flex-grow:${counts[key]};background:${r.color}" title="${counts[key]} ${r.label}"></span>`)
+      .join("");
+  }
+
   function renderCollections() {
     els.collectionsGrid.innerHTML = "";
     COLLECTIONS.forEach((col) => {
       const tile = document.createElement("button");
       tile.className = "collection-tile";
       tile.style.setProperty("--tile-accent", col.accent || "var(--accent)");
+      const peak = rarityOf(topRarityInCollection(col));
       tile.innerHTML = `
-        <h3>${col.name}</h3>
-        <p>${col.tagline || ""}</p>
-        <div class="tile-meta">
-          <span><strong>${col.cards.length}</strong> cards</span>
-          <span class="tile-cta">View set <span class="tile-arrow">→</span></span>
+        <div class="tile-art">
+          <img src="${col.cover}" alt="" loading="lazy" onerror="this.style.display='none';" />
+          <span class="tile-count-pill">${col.cards.length} cards</span>
+          <span class="tile-peek" style="color:${peak.color};border-color:${peak.color}">${peak.holo ? "✦ " : "★ "}${peak.label} inside</span>
+        </div>
+        <div class="tile-body">
+          <h3>${col.name}</h3>
+          <p>${col.tagline || ""}</p>
+          <div class="rarity-distribution">${renderRarityDistribution(col)}</div>
+          <div class="tile-meta">
+            <span class="tile-cta">View set <span class="tile-arrow">→</span></span>
+          </div>
         </div>
       `;
       attachTilt(tile, { maxTilt: 6 });
@@ -332,6 +365,7 @@
   /* ---------- init ---------- */
 
   renderLegend();
+  renderHeroStats();
   applyHashToState();
   render();
 })();
