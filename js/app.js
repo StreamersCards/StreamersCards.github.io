@@ -46,7 +46,7 @@
   // Tilts an element toward the cursor (rotateX/rotateY) and tracks the
   // pointer position for foil/light sheens, all via CSS custom properties
   // so the actual transform lives in CSS.
-  function attachTilt(el, { maxTilt = 10 } = {}) {
+  function attachTilt(el, { maxTilt = 10, accentColor = null } = {}) {
     el.addEventListener("mousemove", (e) => {
       const rect = el.getBoundingClientRect();
       const px = (e.clientX - rect.left) / rect.width;
@@ -58,11 +58,20 @@
       el.style.setProperty("--mx", `${(px * 100).toFixed(1)}%`);
       el.style.setProperty("--my", `${(py * 100).toFixed(1)}%`);
     });
+
+    // Atmospheric reactive lighting updates
+    el.addEventListener("mouseenter", () => {
+      if (accentColor) {
+        document.documentElement.style.setProperty("--ambient-color", accentColor);
+      }
+    });
+
     el.addEventListener("mouseleave", () => {
       el.style.setProperty("--rx", "0deg");
       el.style.setProperty("--ry", "0deg");
       el.style.setProperty("--mx", "50%");
       el.style.setProperty("--my", "50%");
+      document.documentElement.style.setProperty("--ambient-color", "rgba(177, 92, 255, 0.05)");
     });
   }
 
@@ -142,7 +151,8 @@
     COLLECTIONS.forEach((col) => {
       const tile = document.createElement("button");
       tile.className = "collection-tile";
-      tile.style.setProperty("--tile-accent", col.accent || "var(--accent)");
+      const colAccent = col.accent || "var(--accent)";
+      tile.style.setProperty("--tile-accent", colAccent);
       const peak = rarityOf(topRarityInCollection(col));
       tile.innerHTML = `
         <div class="tile-art">
@@ -159,10 +169,74 @@
           </div>
         </div>
       `;
-      attachTilt(tile, { maxTilt: 6 });
+      
+      // Associates background atmospheric transition with the deck's custom theme color
+      attachTilt(tile, { maxTilt: 6, accentColor: colAccent });
       tile.addEventListener("click", () => goToSet(col.id));
       els.collectionsGrid.appendChild(tile);
     });
+  }
+
+  /* ---------- rendering: global search results ---------- */
+
+  function renderGlobalSearchResults() {
+    els.collectionsGrid.innerHTML = "";
+
+    const searchContainer = document.createElement("div");
+    searchContainer.className = "global-search-results";
+
+    const title = document.createElement("h3");
+    title.className = "section-label";
+    title.textContent = `Search results for "${state.query}"`;
+    searchContainer.appendChild(title);
+
+    const resultsGrid = document.createElement("div");
+    resultsGrid.className = "cards-grid";
+    searchContainer.appendChild(resultsGrid);
+
+    let matches = [];
+    COLLECTIONS.forEach((col) => {
+      col.cards.forEach((card) => {
+        if (cardMatchesQuery(card, state.query)) {
+          matches.push({ card, col });
+        }
+      });
+    });
+
+    if (matches.length === 0) {
+      resultsGrid.innerHTML = `<div class="empty-state">No cards found matching "${state.query}" across any collection.</div>`;
+    } else {
+      matches.forEach(({ card }) => {
+        const r = rarityOf(card.rarity);
+        const el = document.createElement("div");
+        el.className = "card" + (r.holo ? " is-holo" : "");
+        el.tabIndex = 0;
+        el.style.setProperty("--rarity-color", r.color);
+        el.style.setProperty("--rarity-glow", r.glow);
+        el.innerHTML = `
+          <div class="card-art">
+            <img src="${card.image}" alt="${card.name}" loading="lazy"
+                 onerror="this.onerror=null;this.src='${SITE.fallbackImage}';" />
+          </div>
+          <div class="card-rarity-bar"></div>
+          <div class="card-body">
+            <p class="card-name">${card.name}</p>
+            <div class="card-meta">
+              <span class="rarity-label">${r.label}</span>
+              <span>${card.number}</span>
+            </div>
+          </div>
+        `;
+        attachTilt(el, { maxTilt: 9, accentColor: r.color });
+        el.addEventListener("click", () => openModal(card));
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(card); }
+        });
+        resultsGrid.appendChild(el);
+      });
+    }
+
+    els.collectionsGrid.appendChild(searchContainer);
   }
 
   /* ---------- rendering: set view (rarity filter + cards) ---------- */
@@ -233,8 +307,7 @@
         </div>
       `;
 
-      // foil sheen + physical tilt, both driven by the same pointer position
-      attachTilt(el, { maxTilt: 9 });
+      attachTilt(el, { maxTilt: 9, accentColor: r.color });
 
       el.addEventListener("click", () => openModal(card));
       el.addEventListener("keydown", (e) => {
@@ -285,6 +358,8 @@
   function goHome() {
     state.setId = null;
     state.rarityFilter = null;
+    state.query = "";
+    els.searchInput.value = "";
     location.hash = "";
     render();
   }
@@ -308,6 +383,8 @@
 
   function render() {
     const inSet = !!state.setId;
+    const isSearchingHome = !inSet && state.query.length > 0;
+
     els.homeView.hidden = inSet;
     els.setView.hidden = !inSet;
     els.breadcrumb.hidden = !inSet;
@@ -318,7 +395,11 @@
       els.breadcrumbCurrent.textContent = collection ? collection.name : "";
       renderSet();
     } else {
-      renderCollections();
+      if (isSearchingHome) {
+        renderGlobalSearchResults();
+      } else {
+        renderCollections();
+      }
     }
   }
 
@@ -330,10 +411,11 @@
 
   els.searchInput.addEventListener("input", (e) => {
     state.query = e.target.value.trim();
-    // Search always makes most sense scoped to the set you're looking at;
-    // if searching from home, jump into the first matching set automatically
-    // only when there is exactly one collection — otherwise just no-op on home.
-    if (state.setId) renderSet();
+    if (state.setId) {
+      renderSet();
+    } else {
+      render();
+    }
   });
 
   window.addEventListener("hashchange", () => {
