@@ -1,21 +1,19 @@
 /* ============================================================
    STREAMERCARDS — ULTIMATE EDITION STYLES
    Designed with high-fidelity trading card game aesthetics.
-   Token system lives in :root. Rarity colors are injected inline
-   per-card by app.js.
    ============================================================ */
 
 :root {
   /* --- color --- */
-  --bg: #05060b; /* True deep void black */
-  --bg-elevated: #0d0f17; 
-  --surface: #121420;
-  --surface-hover: #1b1e2f;
+  --bg: #05060a; 
+  --bg-elevated: #0b0c13; 
+  --surface: #10121d;
+  --surface-hover: #181a2b;
   --border: rgba(255, 255, 255, 0.05); 
   --text: #F3F4F6;
   --text-dim: #9CA3AF;
   --accent: #2FD9C4; 
-  --accent-soft: rgba(47, 217, 196, 0.08);
+  --accent-soft: rgba(47, 217, 196, 0.06);
 
   /* --- type --- */
   --font-display: "Orbitron", sans-serif;
@@ -32,10 +30,10 @@
   --spring-soft: cubic-bezier(0.16, 1, 0.3, 1);
   --ease: cubic-bezier(0.25, 0.8, 0.25, 1);
 
-  /* ambient cursor variables, updated live by app.js */
+  /* ambient tracking variables updated by app.js */
   --gx: 50%;
   --gy: 30%;
-  --ambient-color: rgba(177, 92, 255, 0.05); /* Dynamic backlighting variable */
+  --ambient-color: rgba(177, 92, 255, 0.03); 
 }
 
 * { box-sizing: border-box; }
@@ -46,11 +44,11 @@ body {
   margin: 0;
   position: relative;
   background: var(--bg);
-  /* Immersive, multi-layered environment gradients */
+  /* Gentle, highly-transparent ambient background blending */
   background-image:
-    radial-gradient(ellipse 1000px 600px at 15% -10%, rgba(47, 217, 196, 0.08), transparent 70%),
-    radial-gradient(ellipse 900px 600px at 85% 15%, rgba(177, 92, 255, 0.06), transparent 70%),
-    radial-gradient(ellipse 800px 500px at 50% 60%, rgba(255, 46, 147, 0.02), transparent 60%);
+    radial-gradient(ellipse 1100px 700px at 15% -10%, rgba(47, 217, 196, 0.06), transparent 75%),
+    radial-gradient(ellipse 1000px 700px at 85% 15%, rgba(177, 92, 255, 0.05), transparent 75%),
+    radial-gradient(ellipse 900px 600px at 50% 60%, rgba(255, 46, 147, 0.02), transparent 70%);
   color: var(--text);
   font-family: var(--font-body);
   line-height: 1.5;
@@ -58,41 +56,73 @@ body {
   overflow-x: hidden;
 }
 
-/* Subtle holographic design blueprint matrix pattern to fill layout negative space */
+/* Subtle holographic layout blueprint matrix pattern */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
-  background-size: 32px 32px;
+    linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+  background-size: 36px 36px;
   pointer-events: none;
   z-index: 1;
 }
 
-/* Color-adapting cursor glow that reflects the hovered card/deck's unique color signature */
+/* Color-adapting environmental backlighting system (Fixed: Softer and larger) */
 .ambient-glow {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background: radial-gradient(
-    circle 650px at var(--gx) var(--gy),
+    circle 900px at var(--gx) var(--gy),
     var(--ambient-color) 0%,
-    rgba(15, 17, 26, 0.03) 65%,
-    transparent 100%
+    rgba(5, 6, 10, 0) 75%
   );
-  transition: background 0.5s ease, background-position 0.8s var(--ease);
+  opacity: 0.25; /* Highly feathered and toned down to avoid blinding glare */
+  transition: background 0.6s ease, background-position 1s var(--ease);
 }
 
-/* Fine structural overlay grain */
+/* Cosmic stardust floating particles */
+.particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  background: radial-gradient(circle, #FFF 0%, rgba(255,255,255,0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float-up 18s linear infinite;
+}
+@keyframes float-up {
+  0% {
+    transform: translateY(110vh) translateX(0) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10vh) translateX(50px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Overlay grain */
 .grain {
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  opacity: 0.012;
+  opacity: 0.01;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
@@ -113,7 +143,7 @@ button {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(5, 6, 11, 0.75);
+  background: rgba(5, 6, 10, 0.8);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
 }
@@ -147,7 +177,7 @@ button {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 13px;
-  color: #05060b;
+  color: #05060a;
   background: linear-gradient(135deg, var(--accent), #7FF0E0);
   padding: 5px 8px;
   border-radius: 6px;
@@ -191,7 +221,7 @@ button {
 #nav-home-btn[data-active="false"] { opacity: 0; pointer-events: none; }
 
 .header-search input {
-  background: rgba(18, 20, 32, 0.7);
+  background: rgba(16, 18, 29, 0.75);
   border: 1px solid var(--border);
   color: var(--text);
   padding: 10px 18px;
@@ -235,65 +265,69 @@ main {
   padding: 64px 24px 96px; 
 }
 
+/* Balanced layout alignment (Fixed: prevents text overlaps) */
 .hero { 
   max-width: 720px; 
   margin-bottom: 48px; 
   position: relative; 
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .hero h1 {
   font-family: var(--font-display);
   font-size: clamp(34px, 5.5vw, 48px);
   line-height: 1.15;
-  margin: 0 0 16px;
+  margin: 0;
   font-weight: 800;
   letter-spacing: -0.5px;
 }
 
+/* Seamless text gradient sweep (Fixed: No letter splitting) */
 .hero-accent {
-  display: block;
-  margin-top: 6px;
-  font-size: 0.95em;
-  background: linear-gradient(95deg, var(--accent) 0%, #A855F7 50%, #FF2E93 100%);
-  background-size: 200% auto;
+  display: inline-block;
+  background: linear-gradient(90deg, #ff2e93, #a855f7, #2fd9c4, #ff2e93);
+  background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: shimmer 6s linear infinite;
+  animation: text-shimmer-sweep 10s linear infinite;
 }
-@keyframes shimmer {
+
+@keyframes text-shimmer-sweep {
   0% { background-position: 0% center; }
-  100% { background-position: -200% center; }
+  100% { background-position: 300% center; }
 }
 
 .hero-sub { 
   color: var(--text-dim); 
   font-size: 15px; 
-  margin: 0 0 32px; 
+  margin: 0; 
   line-height: 1.6; 
 }
 
-/* Tech-dashboard HUD statistics panel */
+/* Glass dashboard statistics board */
 .stat-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 140px);
-  gap: 16px;
+  display: flex;
+  gap: 36px;
   border: 1px solid var(--border);
-  background: linear-gradient(145deg, rgba(18, 20, 32, 0.4), rgba(13, 15, 23, 0.5));
+  background: linear-gradient(145deg, rgba(16, 18, 29, 0.4), rgba(11, 12, 20, 0.5));
   backdrop-filter: blur(8px);
-  padding: 16px 24px;
+  padding: 18px 28px;
   border-radius: var(--radius-card);
   width: fit-content;
   box-shadow: 
     inset 0 1px 0px rgba(255, 255, 255, 0.05),
     0 10px 30px -10px rgba(0,0,0,0.4);
+  margin-top: 6px;
 }
 .stat-strip > div { 
   display: flex; 
   flex-direction: column; 
   gap: 4px; 
   border-left: 2px solid rgba(255, 255, 255, 0.05);
-  padding-left: 14px;
+  padding-left: 16px;
 }
 .stat-strip > div:first-child {
   border-left: 2px solid var(--accent);
@@ -350,7 +384,7 @@ main {
   padding: 8px 16px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: rgba(18, 20, 32, 0.6);
+  background: rgba(16, 18, 29, 0.6);
   color: var(--text-dim);
   backdrop-filter: blur(4px);
   transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease,
@@ -368,7 +402,7 @@ main {
 }
 button.rarity-chip:active { transform: translateY(0) scale(0.95); }
 button.rarity-chip[data-selected="true"] {
-  color: #05060b;
+  color: #05060a;
   background: var(--chip-color, var(--accent));
   border-color: var(--chip-color, var(--accent));
   box-shadow: 0 4px 16px -4px var(--chip-color, var(--accent));
@@ -389,7 +423,7 @@ button.rarity-chip[data-selected="true"] {
   --mx: 50%;
   --my: 30%;
   position: relative;
-  background: linear-gradient(150deg, rgba(18, 20, 32, 0.8), rgba(13, 15, 23, 0.9));
+  background: linear-gradient(150deg, rgba(16, 18, 29, 0.8), rgba(11, 12, 20, 0.9));
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   padding: 0;
@@ -410,7 +444,7 @@ button.rarity-chip[data-selected="true"] {
   z-index: 1;
 }
 
-/* Glass glare tracker layer */
+/* Light glare mouse tracking overlay */
 .collection-tile::after {
   content: "";
   position: absolute;
@@ -440,7 +474,7 @@ button.rarity-chip[data-selected="true"] {
   position: relative;
   height: 140px;
   overflow: hidden;
-  background: #0d0f17;
+  background: #0b0c13;
 }
 .tile-art img {
   width: 100%;
@@ -454,7 +488,7 @@ button.rarity-chip[data-selected="true"] {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(18, 20, 32, 1) 0%, rgba(18, 20, 32, 0.2) 80%);
+  background: linear-gradient(to top, rgba(16, 18, 29, 1) 0%, rgba(16, 18, 29, 0.2) 80%);
 }
 
 .tile-count-pill, .tile-peek {
@@ -465,7 +499,7 @@ button.rarity-chip[data-selected="true"] {
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(5, 6, 11, 0.75);
+  background: rgba(5, 6, 10, 0.75);
   backdrop-filter: blur(8px);
   z-index: 2;
 }
@@ -533,7 +567,7 @@ button.rarity-chip[data-selected="true"] {
 .card {
   --rarity-color: var(--accent);
   --rarity-glow: var(--accent-soft);
-  /* Dynamic tilt values managed live by app.js */
+  /* Dynamic 3D card tilt managed live by app.js */
   --rx: 0deg;
   --ry: 0deg;
   position: relative;
@@ -545,6 +579,20 @@ button.rarity-chip[data-selected="true"] {
   transform-style: preserve-3d;
   transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(0) scale(1);
   transition: transform 0.4s var(--spring), box-shadow 0.3s ease, border-color 0.25s ease;
+  
+  /* Smooth gaming staggered booster-pack load-deal entry animation */
+  animation: card-deal-reveal 0.6s var(--spring) both;
+}
+
+@keyframes card-deal-reveal {
+  0% {
+    opacity: 0;
+    transform: perspective(900px) translateY(40px) scale(0.92) rotateX(15deg);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(900px) translateY(0) scale(1) rotateX(0deg);
+  }
 }
 
 .card:hover, .card:focus-visible {
@@ -568,7 +616,7 @@ button.rarity-chip[data-selected="true"] {
 }
 .card-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* Standard hover reflection sweep position-linked to mouse coords */
+/* Foil sheen cursor reflection overlay */
 .card-art::after {
   content: "";
   position: absolute;
@@ -585,7 +633,7 @@ button.rarity-chip[data-selected="true"] {
 }
 .card:hover .card-art::after { opacity: 1; }
 
-/* Mathematical, 100% seamless holographic gradient sweep loop */
+/* Mathematically seamless Holo/Mythic horizontal diagonal sliding gradient loop (Fixed: No quadrants) */
 .card.is-holo .card-art::after {
   content: "";
   position: absolute;
@@ -594,52 +642,39 @@ button.rarity-chip[data-selected="true"] {
   opacity: 0.35;
   mix-blend-mode: color-dodge;
   background: linear-gradient(
-    115deg,
+    90deg,
     #ff8adf 0%,
     #8ad0ff 25%,
     #b7ff8a 50%,
     #ffe08a 75%,
     #ff8adf 100%
   );
-  background-size: 200% 200%;
-  animation: holo-sweep 6s linear infinite; /* Complete loops with identical entry and exit states */
+  background-size: 400% 100%; /* Purely sliding X-axis keeps it seamless and gridline-free */
+  animation: holo-sweep-loop 7s linear infinite; 
   transition: opacity 0.3s ease;
 }
 .card.is-holo:hover .card-art::after {
   opacity: 0.7;
 }
 
-@keyframes holo-sweep {
-  0% {
-    background-position: 0% 0%;
-  }
-  100% {
-    background-position: 200% 200%;
-  }
+@keyframes holo-sweep-loop {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 400% 0%; }
 }
 
-/* Seamless text gradient shimmer designed specifically for mythic tags */
+/* Beautiful custom shimmering mythic typography labels */
 .card.is-holo .rarity-label {
   background: linear-gradient(90deg, #ff8adf, #8ad0ff, #b7ff8a, #ffe08a, #ff8adf);
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: mythic-text-shimmer 4s linear infinite;
+  animation: text-shimmer-sweep 4s linear infinite;
   font-weight: 800;
   text-shadow: none;
 }
 
-@keyframes mythic-text-shimmer {
-  0% {
-    background-position: 0% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-}
-
-/* Glowing card tier decoration lines */
+/* Dynamic glowing border bars */
 .card-rarity-bar {
   height: 4px;
   background: var(--rarity-color);
@@ -684,7 +719,7 @@ button.rarity-chip[data-selected="true"] {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(5, 6, 11, 0.85);
+  background: rgba(5, 6, 10, 0.85);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -740,7 +775,7 @@ button.rarity-chip[data-selected="true"] {
 .modal-close:hover { background: rgba(0,0,0,0.8); transform: rotate(90deg); }
 
 .modal-art {
-  background: #05060b;
+  background: #05060a;
   border-radius: 20px 0 0 20px;
   overflow: hidden;
   position: relative;
@@ -782,10 +817,10 @@ button.rarity-chip[data-selected="true"] {
   .header-search input:focus { width: 100%; }
   .modal { grid-template-columns: 1fr; }
   .modal-art { border-radius: 20px 20px 0 0; aspect-ratio: 4/3; }
-  .stat-strip { width: 100%; grid-template-columns: repeat(3, 1fr); justify-content: space-between; }
+  .stat-strip { width: 100%; justify-content: space-between; }
 }
 
-/* ---------- user-agent reduced motion preferences ---------- */
+/* ---------- prefers reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -794,5 +829,5 @@ button.rarity-chip[data-selected="true"] {
   .card.is-holo .card-art::after { animation: none; }
   .modal { animation: none; }
   .modal-backdrop:not([hidden]) { animation: none; }
-  .ambient-glow, body::before { display: none; }
+  .ambient-glow, body::before, .particles { display: none; }
 }

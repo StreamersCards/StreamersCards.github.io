@@ -45,7 +45,6 @@
 
   // Tilts an element toward the cursor (rotateX/rotateY) and tracks the
   // pointer position for foil/light sheens, all via CSS custom properties
-  // so the actual transform lives in CSS.
   function attachTilt(el, { maxTilt = 10, accentColor = null } = {}) {
     el.addEventListener("mousemove", (e) => {
       const rect = el.getBoundingClientRect();
@@ -59,7 +58,7 @@
       el.style.setProperty("--my", `${(py * 100).toFixed(1)}%`);
     });
 
-    // Atmospheric reactive lighting updates
+    // Color-adapting ambient environmental backlighting
     el.addEventListener("mouseenter", () => {
       if (accentColor) {
         document.documentElement.style.setProperty("--ambient-color", accentColor);
@@ -71,12 +70,11 @@
       el.style.setProperty("--ry", "0deg");
       el.style.setProperty("--mx", "50%");
       el.style.setProperty("--my", "50%");
-      document.documentElement.style.setProperty("--ambient-color", "rgba(177, 92, 255, 0.05)");
+      document.documentElement.style.setProperty("--ambient-color", "rgba(177, 92, 255, 0.03)");
     });
   }
 
-  // Nudges an element a few px toward the cursor while hovering — reads
-  // as "this button noticed you" rather than a static hit target.
+  // Nudges an element a few px toward the cursor while hovering
   function attachMagnetic(el, { strength = 0.25, max = 7 } = {}) {
     el.addEventListener("mousemove", (e) => {
       const rect = el.getBoundingClientRect();
@@ -148,11 +146,16 @@
 
   function renderCollections() {
     els.collectionsGrid.innerHTML = "";
-    COLLECTIONS.forEach((col) => {
+    COLLECTIONS.forEach((col, idx) => {
       const tile = document.createElement("button");
       tile.className = "collection-tile";
       const colAccent = col.accent || "var(--accent)";
       tile.style.setProperty("--tile-accent", colAccent);
+      
+      // Card staggered entry styling on home screen
+      tile.style.animation = "card-deal-reveal 0.6s var(--spring) both";
+      tile.style.animationDelay = `${idx * 0.05}s`;
+
       const peak = rarityOf(topRarityInCollection(col));
       tile.innerHTML = `
         <div class="tile-art">
@@ -170,7 +173,6 @@
         </div>
       `;
       
-      // Associates background atmospheric transition with the deck's custom theme color
       attachTilt(tile, { maxTilt: 6, accentColor: colAccent });
       tile.addEventListener("click", () => goToSet(col.id));
       els.collectionsGrid.appendChild(tile);
@@ -206,13 +208,15 @@
     if (matches.length === 0) {
       resultsGrid.innerHTML = `<div class="empty-state">No cards found matching "${state.query}" across any collection.</div>`;
     } else {
-      matches.forEach(({ card }) => {
+      matches.forEach(({ card }, idx) => {
         const r = rarityOf(card.rarity);
         const el = document.createElement("div");
         el.className = "card" + (r.holo ? " is-holo" : "");
         el.tabIndex = 0;
         el.style.setProperty("--rarity-color", r.color);
         el.style.setProperty("--rarity-glow", r.glow);
+        el.style.animationDelay = `${idx * 0.03}s`; // staggered deal in search results
+        
         el.innerHTML = `
           <div class="card-art">
             <img src="${card.image}" alt="${card.name}" loading="lazy"
@@ -285,13 +289,17 @@
       return;
     }
 
-    filtered.forEach((card) => {
+    filtered.forEach((card, idx) => {
       const r = rarityOf(card.rarity);
       const el = document.createElement("div");
       el.className = "card" + (r.holo ? " is-holo" : "");
       el.tabIndex = 0;
       el.style.setProperty("--rarity-color", r.color);
       el.style.setProperty("--rarity-glow", r.glow);
+      
+      // Assign dynamic layout delays to animate cards like actual dealing decks
+      el.style.animationDelay = `${idx * 0.04}s`;
+
       el.innerHTML = `
         <div class="card-art">
           <img src="${card.image}" alt="${card.name}" loading="lazy"
@@ -439,6 +447,29 @@
     });
   });
 
+  /* ---------- background stardust cosmic system ---------- */
+
+  function initStardust() {
+    const container = document.createElement("div");
+    container.className = "particles";
+    document.body.appendChild(container);
+
+    const stardustDensity = 24;
+    for (let i = 0; i < stardustDensity; i++) {
+      const particle = document.createElement("div");
+      particle.className = "particle";
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
+      const sizeVal = Math.random() * 3 + 1.5;
+      particle.style.width = `${sizeVal}px`;
+      particle.style.height = `${sizeVal}px`;
+      particle.style.animationDuration = `${Math.random() * 15 + 10}s`;
+      particle.style.animationDelay = `-${Math.random() * 15}s`;
+      particle.style.opacity = (Math.random() * 0.18 + 0.04).toFixed(2);
+      container.appendChild(particle);
+    }
+  }
+
   /* ---------- magnetic header buttons ---------- */
 
   attachMagnetic(els.logoBtn, { strength: 0.3, max: 6 });
@@ -446,6 +477,7 @@
 
   /* ---------- init ---------- */
 
+  initStardust();
   renderLegend();
   renderHeroStats();
   applyHashToState();
