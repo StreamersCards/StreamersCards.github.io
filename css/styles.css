@@ -7,7 +7,7 @@
   /* --- color --- */
   --bg: #040508; 
   --bg-elevated: #090a10; 
-  --surface: #0f111a;
+  --surface: #10121d;
   --surface-hover: #151824;
   --border: rgba(255, 255, 255, 0.05); 
   --text: #F3F4F6;
@@ -49,6 +49,11 @@ button, input, select, textarea {
   outline: none;
   appearance: none;
   -webkit-appearance: none;
+}
+
+/* Ensures HTML hidden attribute overrides flex display specifications */
+[hidden], .view[hidden], .breadcrumb[hidden] {
+  display: none !important;
 }
 
 * { box-sizing: border-box; }
@@ -97,7 +102,7 @@ body::before {
     var(--ambient-color) 0%,
     rgba(5, 6, 10, 0) 70%
   );
-  opacity: 0.15; /* Prevents visual cluttering behind content panels */
+  opacity: 0.15; 
   transition: background 0.8s ease, background-position 1.2s var(--ease);
 }
 
@@ -560,7 +565,7 @@ main {
   transform: rotateY(180deg);
 }
 
-/* ---------- card depth enhancements (preserve-3d) ---------- */
+/* ---------- cards grid & dynamic 3D cards ---------- */
 
 .cards-grid {
   display: grid !important;
@@ -722,7 +727,7 @@ main {
   gap: 24px !important;
 }
 
-/* Collection tile styles (Fixed: resets browser defaults to avoid massive white blocks) */
+/* Collection tile styles (Resets browser defaults completely to prevent white blocks) */
 .collection-tile {
   appearance: none !important;
   -webkit-appearance: none !important;
@@ -862,6 +867,53 @@ main {
 .collection-tile .tile-meta strong { color: var(--tile-accent, var(--accent)); font-weight: 600; }
 .tile-arrow { display: inline-block; transition: transform 0.25s var(--ease); }
 .collection-tile:hover .tile-arrow { transform: translateX(5px); }
+
+/* ---------- rarity legend & filter (Capsules Styling Restored) ---------- */
+
+.rarity-legend, .rarity-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 36px;
+  width: 100%;
+}
+
+.rarity-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 8px 18px !important; /* Force override element resets */
+  border-radius: 999px !important;
+  border: 1px solid var(--border) !important;
+  background: rgba(16, 18, 29, 0.6) !important;
+  color: var(--text-dim) !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(4px) !important;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease,
+    transform 0.15s var(--spring-soft), box-shadow 0.15s ease !important;
+}
+
+.rarity-chip:hover {
+  color: var(--text) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px) !important;
+}
+
+.rarity-chip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+button.rarity-chip[data-selected="true"] {
+  color: #05060b !important;
+  background: var(--chip-color, var(--accent)) !important;
+  border-color: var(--chip-color, var(--accent)) !important;
+  box-shadow: 0 4px 16px -4px var(--chip-color, var(--accent)) !important;
+}
 
 /* ---------- global search results alignment ---------- */
 
