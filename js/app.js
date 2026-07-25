@@ -41,6 +41,49 @@
     query: "",
   };
 
+  /* ---------- tactile interaction helpers ---------- */
+
+  // Tilts an element toward the cursor (rotateX/rotateY) and tracks the
+  // pointer position for foil/light sheens, all via CSS custom properties
+  // so the actual transform lives in CSS.
+  function attachTilt(el, { maxTilt = 10 } = {}) {
+    el.addEventListener("mousemove", (e) => {
+      const rect = el.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+      const ry = (px - 0.5) * maxTilt * 2;
+      const rx = (0.5 - py) * maxTilt * 2;
+      el.style.setProperty("--rx", `${rx.toFixed(2)}deg`);
+      el.style.setProperty("--ry", `${ry.toFixed(2)}deg`);
+      el.style.setProperty("--mx", `${(px * 100).toFixed(1)}%`);
+      el.style.setProperty("--my", `${(py * 100).toFixed(1)}%`);
+    });
+    el.addEventListener("mouseleave", () => {
+      el.style.setProperty("--rx", "0deg");
+      el.style.setProperty("--ry", "0deg");
+      el.style.setProperty("--mx", "50%");
+      el.style.setProperty("--my", "50%");
+    });
+  }
+
+  // Nudges an element a few px toward the cursor while hovering — reads
+  // as "this button noticed you" rather than a static hit target.
+  function attachMagnetic(el, { strength = 0.25, max = 7 } = {}) {
+    el.addEventListener("mousemove", (e) => {
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const tx = Math.max(-max, Math.min(max, (e.clientX - cx) * strength));
+      const ty = Math.max(-max, Math.min(max, (e.clientY - cy) * strength));
+      el.style.setProperty("--tx", `${tx.toFixed(1)}px`);
+      el.style.setProperty("--ty", `${ty.toFixed(1)}px`);
+    });
+    el.addEventListener("mouseleave", () => {
+      el.style.setProperty("--tx", "0px");
+      el.style.setProperty("--ty", "0px");
+    });
+  }
+
   /* ---------- helpers ---------- */
 
   function findCollection(id) {
@@ -80,9 +123,10 @@
         <p>${col.tagline || ""}</p>
         <div class="tile-meta">
           <span><strong>${col.cards.length}</strong> cards</span>
-          <span>View set →</span>
+          <span class="tile-cta">View set <span class="tile-arrow">→</span></span>
         </div>
       `;
+      attachTilt(tile, { maxTilt: 6 });
       tile.addEventListener("click", () => goToSet(col.id));
       els.collectionsGrid.appendChild(tile);
     });
@@ -156,12 +200,8 @@
         </div>
       `;
 
-      // foil sheen follows pointer
-      el.addEventListener("mousemove", (e) => {
-        const rect = el.getBoundingClientRect();
-        el.style.setProperty("--mx", `${((e.clientX - rect.left) / rect.width) * 100}%`);
-        el.style.setProperty("--my", `${((e.clientY - rect.top) / rect.height) * 100}%`);
-      });
+      // foil sheen + physical tilt, both driven by the same pointer position
+      attachTilt(el, { maxTilt: 9 });
 
       el.addEventListener("click", () => openModal(card));
       el.addEventListener("keydown", (e) => {
@@ -267,6 +307,27 @@
     applyHashToState();
     render();
   });
+
+  /* ---------- ambient cursor glow ---------- */
+
+  const ambientGlow = document.getElementById("ambient-glow");
+  let glowQueued = false;
+  document.addEventListener("mousemove", (e) => {
+    if (glowQueued) return;
+    glowQueued = true;
+    requestAnimationFrame(() => {
+      const xPct = ((e.clientX / window.innerWidth) * 100).toFixed(1);
+      const yPct = ((e.clientY / window.innerHeight) * 100).toFixed(1);
+      ambientGlow.style.setProperty("--gx", `${xPct}%`);
+      ambientGlow.style.setProperty("--gy", `${yPct}%`);
+      glowQueued = false;
+    });
+  });
+
+  /* ---------- magnetic header buttons ---------- */
+
+  attachMagnetic(els.logoBtn, { strength: 0.3, max: 6 });
+  attachMagnetic(els.navHomeBtn, { strength: 0.3, max: 6 });
 
   /* ---------- init ---------- */
 

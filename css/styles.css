@@ -25,6 +25,16 @@
   --radius-card: 14px;
   --radius-sm: 8px;
   --max-width: 1180px;
+
+  /* --- motion: a springy overshoot for anything that should feel "grabbed",
+     and a plain ease for things that should feel calm --- */
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ambient cursor glow position, updated live by app.js */
+  --gx: 50%;
+  --gy: 30%;
 }
 
 * { box-sizing: border-box; }
@@ -33,6 +43,7 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
+  position: relative;
   background: var(--bg);
   background-image:
     radial-gradient(ellipse 900px 500px at 15% -10%, rgba(47, 217, 196, 0.08), transparent 60%),
@@ -41,12 +52,46 @@ body {
   font-family: var(--font-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
+
+/* a soft light that drifts with the cursor, low enough to read as
+   atmosphere rather than decoration */
+.ambient-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 480px at var(--gx) var(--gy),
+    rgba(47, 217, 196, 0.06),
+    transparent 70%
+  );
+  transition: background-position 0.6s var(--ease);
+}
+
+/* fine grain so flat dark panels don't feel like plastic */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+.site-header, main, .site-footer { position: relative; z-index: 2; }
 
 button {
   font-family: inherit;
   cursor: pointer;
 }
+
+/* every interactive surface gets the same quick, tactile press-down —
+   defined once, used everywhere via .pressable */
+.pressable { transition: transform 0.15s var(--ease); }
+.pressable:active { transform: scale(0.94); }
 
 /* ---------- header ---------- */
 
@@ -76,12 +121,17 @@ button {
   border: none;
   padding: 4px 6px;
   border-radius: var(--radius-sm);
-  transition: background 0.15s ease;
+  transition: background 0.2s var(--ease), transform 0.2s var(--spring-soft);
+  /* app.js nudges this a few px toward the cursor while hovering (--tx/--ty) */
+  transform: translate(var(--tx, 0), var(--ty, 0));
 }
 .logo:hover { background: var(--surface); }
+.logo:active { transform: translate(var(--tx, 0), var(--ty, 0)) scale(0.93); }
 .logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .logo-mark {
+  position: relative;
+  overflow: hidden;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 14px;
@@ -90,7 +140,18 @@ button {
   padding: 6px 8px;
   border-radius: 6px;
   letter-spacing: 0.5px;
+  box-shadow: 0 2px 10px -2px var(--accent-soft);
 }
+/* a light sweep that glides across the mark on hover, like foil catching light */
+.logo-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.6s var(--ease);
+}
+.logo:hover .logo-mark::after { transform: translateX(120%); }
 
 .logo-text {
   font-family: var(--font-display);
@@ -104,6 +165,8 @@ button {
 .header-nav { flex: 1; }
 
 .nav-link {
+  position: relative;
+  overflow: hidden;
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
@@ -111,9 +174,11 @@ button {
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
-  transition: all 0.15s ease;
+  transition: color 0.15s var(--ease), border-color 0.15s var(--ease), transform 0.2s var(--spring-soft);
+  transform: translate(var(--tx, 0), var(--ty, 0));
 }
 .nav-link:hover { color: var(--text); border-color: var(--accent); }
+.nav-link:active { transform: translate(var(--tx, 0), var(--ty, 0)) scale(0.93); }
 
 #nav-home-btn[data-active="false"] { opacity: 0; pointer-events: none; }
 
@@ -125,12 +190,14 @@ button {
   border-radius: 999px;
   font-size: 13px;
   width: 200px;
-  transition: width 0.2s ease, border-color 0.2s ease;
+  transition: width 0.3s var(--spring-soft), border-color 0.2s ease, box-shadow 0.2s ease;
 }
+.header-search input:hover { border-color: #3A4256; }
 .header-search input:focus {
   outline: none;
   border-color: var(--accent);
   width: 240px;
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 .header-search input::placeholder { color: var(--text-dim); }
 
@@ -164,7 +231,21 @@ main { max-width: var(--max-width); margin: 0 auto; padding: 40px 24px 80px; }
   margin: 0 0 12px;
   font-weight: 700;
 }
-.hero-accent { color: var(--accent); }
+.hero-accent {
+  background: linear-gradient(100deg, var(--accent) 20%, #fff 40%, var(--accent) 60%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: -220% center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-accent { animation: none; }
+}
 .hero-sub { color: var(--text-dim); font-size: 15px; margin: 0; }
 
 .section-label {
@@ -197,15 +278,27 @@ main { max-width: var(--max-width); margin: 0 auto; padding: 40px 24px 80px; }
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-dim);
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease,
+    transform 0.15s var(--spring-soft), box-shadow 0.15s ease;
 }
-.rarity-chip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.rarity-chip .dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  transition: transform 0.2s var(--spring);
+}
 
-button.rarity-chip:hover { color: var(--text); border-color: currentColor; }
+.rarity-chip:hover {
+  color: var(--text);
+  border-color: currentColor;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px -4px rgba(0,0,0,0.4);
+}
+.rarity-chip:hover .dot { transform: scale(1.3); }
+button.rarity-chip:active { transform: translateY(-2px) scale(0.92); }
 button.rarity-chip[data-selected="true"] {
   color: var(--bg);
   background: var(--chip-color, var(--accent));
   border-color: var(--chip-color, var(--accent));
+  box-shadow: 0 4px 16px -4px var(--chip-color, var(--accent));
 }
 
 /* ---------- collections grid (home) ---------- */
@@ -217,6 +310,10 @@ button.rarity-chip[data-selected="true"] {
 }
 
 .collection-tile {
+  --rx: 0deg;
+  --ry: 0deg;
+  --mx: 50%;
+  --my: 30%;
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -224,7 +321,10 @@ button.rarity-chip[data-selected="true"] {
   padding: 22px;
   overflow: hidden;
   text-align: left;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transform-style: preserve-3d;
+  transform: perspective(700px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(0);
+  transition: transform 0.45s var(--spring), border-color 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 10px -6px rgba(0,0,0,0.5);
 }
 .collection-tile::before {
   content: "";
@@ -234,7 +334,26 @@ button.rarity-chip[data-selected="true"] {
   opacity: 0.12;
   pointer-events: none;
 }
-.collection-tile:hover { transform: translateY(-4px); border-color: var(--tile-accent, var(--accent)); }
+/* light that tracks the cursor across the tile, like glass catching a lamp */
+.collection-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.16), transparent 45%);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.collection-tile:hover {
+  transform: perspective(700px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-6px);
+  border-color: var(--tile-accent, var(--accent));
+  box-shadow: 0 16px 34px -14px var(--tile-accent, rgba(0,0,0,0.5));
+}
+.collection-tile:hover::after { opacity: 1; }
+.collection-tile:active {
+  transform: perspective(700px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-2px) scale(0.98);
+  transition: transform 0.12s var(--ease);
+}
 
 .collection-tile h3 {
   font-family: var(--font-display);
@@ -259,6 +378,8 @@ button.rarity-chip[data-selected="true"] {
   position: relative;
 }
 .collection-tile .tile-meta strong { color: var(--tile-accent, var(--accent)); font-weight: 600; }
+.tile-arrow { display: inline-block; transition: transform 0.25s var(--spring); }
+.collection-tile:hover .tile-arrow { transform: translateX(4px); }
 
 /* ---------- set header ---------- */
 
@@ -277,6 +398,8 @@ button.rarity-chip[data-selected="true"] {
 .card {
   --rarity-color: var(--accent);
   --rarity-glow: var(--accent-soft);
+  --rx: 0deg;
+  --ry: 0deg;
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -284,14 +407,20 @@ button.rarity-chip[data-selected="true"] {
   overflow: hidden;
   cursor: pointer;
   transform-style: preserve-3d;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(0) scale(1);
+  transition: transform 0.4s var(--spring), box-shadow 0.3s ease, border-color 0.25s ease;
 }
 
 .card:hover, .card:focus-visible {
   border-color: var(--rarity-color);
-  box-shadow: 0 8px 28px -8px var(--rarity-glow), 0 0 0 1px var(--rarity-color) inset;
-  transform: translateY(-6px);
+  box-shadow: 0 14px 34px -10px var(--rarity-glow), 0 0 0 1px var(--rarity-color) inset;
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-8px) scale(1.015);
   outline: none;
+}
+
+.card:active {
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-3px) scale(0.97);
+  transition: transform 0.12s var(--ease);
 }
 
 .card-art {
@@ -336,7 +465,16 @@ button.rarity-chip[data-selected="true"] {
   100% { background-position: 50% 50%, 200% 50%; }
 }
 
-.card-rarity-bar { height: 4px; background: var(--rarity-color); }
+.card-rarity-bar {
+  height: 4px;
+  background: var(--rarity-color);
+  transition: height 0.25s var(--spring), box-shadow 0.25s ease;
+}
+.card:hover .card-rarity-bar,
+.card:focus-visible .card-rarity-bar {
+  height: 6px;
+  box-shadow: 0 0 14px var(--rarity-color);
+}
 
 .card-body { padding: 12px 14px 14px; }
 .card-name { font-weight: 600; font-size: 14px; margin: 0 0 4px; }
@@ -387,8 +525,19 @@ button.rarity-chip[data-selected="true"] {
   grid-template-columns: 200px 1fr;
   gap: 0;
   position: relative;
-  box-shadow: 0 20px 60px -12px rgba(0,0,0,0.6);
+  box-shadow: 0 20px 60px -12px rgba(0,0,0,0.6), 0 0 40px -10px var(--rarity-color);
+  animation: modal-pop 0.4s var(--spring) both;
 }
+
+@keyframes modal-pop {
+  from { opacity: 0; transform: scale(0.88) translateY(14px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes backdrop-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal-backdrop:not([hidden]) { animation: backdrop-fade 0.25s var(--ease) both; }
 
 .modal-close {
   position: absolute;
@@ -403,7 +552,10 @@ button.rarity-chip[data-selected="true"] {
   border-radius: 50%;
   line-height: 1;
   z-index: 2;
+  transition: transform 0.25s var(--spring), background 0.15s ease;
 }
+.modal-close:hover { background: rgba(0,0,0,0.65); transform: rotate(90deg); }
+.modal-close:active { transform: rotate(90deg) scale(0.85); }
 
 .modal-art {
   background: var(--surface);
@@ -452,6 +604,10 @@ button.rarity-chip[data-selected="true"] {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .card, .collection-tile, .logo { transition: none; }
+  .card, .collection-tile, .logo, .nav-link, .rarity-chip, .modal-close { transition: none; }
+  .card, .collection-tile { transform: none !important; }
   .card.is-holo .card-art::after { animation: none; }
+  .modal { animation: none; }
+  .modal-backdrop:not([hidden]) { animation: none; }
+  .ambient-glow { display: none; }
 }

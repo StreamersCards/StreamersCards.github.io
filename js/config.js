@@ -83,7 +83,7 @@ const COLLECTIONS = [
       },
       {
         id: "ls-003",
-        name: "ODED SVR (SuperCharged))",
+        name: "ODED SVR (SuperCharged)",
         number: "003/040",
         rarity: "rare",
         image: "images/cards/ls-003.png",
