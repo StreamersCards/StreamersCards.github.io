@@ -33,6 +33,12 @@
     modalName: document.getElementById("modal-name"),
     modalNumber: document.getElementById("modal-number"),
     modalDesc: document.getElementById("modal-desc"),
+    
+    // Booster Pack nodes
+    boosterBtn: document.getElementById("booster-action-btn"),
+    boosterArena: document.getElementById("booster-arena"),
+    boosterPack: document.getElementById("booster-pack"),
+    boosterResults: document.getElementById("booster-results")
   };
 
   let state = {
@@ -153,7 +159,6 @@
       tile.style.setProperty("--tile-accent", colAccent);
       
       // Card staggered entry styling on home screen
-      tile.style.animation = "card-deal-reveal 0.6s var(--spring) both";
       tile.style.animationDelay = `${idx * 0.05}s`;
 
       const peak = rarityOf(topRarityInCollection(col));
@@ -335,6 +340,83 @@
     renderCardsGrid(collection);
   }
 
+  /* ---------- booster station logic ---------- */
+
+  function handleBoosterToggle() {
+    if (els.boosterArena.hidden) {
+      els.boosterArena.hidden = false;
+      els.boosterPack.className = "booster-pack";
+      els.boosterPack.hidden = false;
+      els.boosterResults.hidden = true;
+      els.boosterBtn.textContent = "Close Booster Station";
+    } else {
+      els.boosterArena.hidden = true;
+      els.boosterBtn.textContent = "Rip Mystery Pack";
+    }
+  }
+
+  function openBoosterPack() {
+    els.boosterPack.className = "booster-pack shake";
+    
+    // Step 1: Pack shakes violently, then splits
+    setTimeout(() => {
+      els.boosterPack.className = "booster-pack rip-open";
+      
+      setTimeout(() => {
+        els.boosterPack.hidden = true;
+        els.boosterResults.innerHTML = "";
+        els.boosterResults.hidden = false;
+
+        // Pull 3 completely random mystery cards from all available sets
+        const pool = COLLECTIONS.flatMap(c => c.cards);
+        const rolledCards = [];
+        for (let i = 0; i < 3; i++) {
+          rolledCards.push(pool[Math.floor(Math.random() * pool.length)]);
+        }
+
+        rolledCards.forEach((card, idx) => {
+          const r = rarityOf(card.rarity);
+          const wrapper = document.createElement("div");
+          wrapper.className = "card-3d-wrapper";
+          wrapper.style.animationDelay = `${idx * 0.15}s`;
+
+          wrapper.innerHTML = `
+            <div class="card-3d-inner">
+              <div class="card-3d-back"></div>
+              <div class="card-3d-front">
+                <div class="card" style="--rarity-color:${r.color}; --rarity-glow:${r.glow}; margin:0; width:100%; height:100%; pointer-events:none;">
+                  <div class="card-art">
+                    <img src="${card.image}" alt="${card.name}" onerror="this.onerror=null;this.src='${SITE.fallbackImage}';" />
+                  </div>
+                  <div class="card-rarity-bar"></div>
+                  <div class="card-body" style="padding: 10px;">
+                    <p class="card-name" style="font-size: 13px;">${card.name}</p>
+                    <div class="card-meta">
+                      <span class="rarity-label">${r.label}</span>
+                      <span>${card.number}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+
+          // Clicking triggers the dynamic 3D rotation flip reveal
+          wrapper.addEventListener("click", () => {
+            wrapper.classList.toggle("flipped");
+            document.documentElement.style.setProperty("--ambient-color", r.color);
+          });
+
+          els.boosterResults.appendChild(wrapper);
+        });
+
+      }, 600);
+    }, 1200);
+  }
+
+  els.boosterBtn.addEventListener("click", handleBoosterToggle);
+  els.boosterPack.addEventListener("click", openBoosterPack);
+
   /* ---------- modal ---------- */
 
   function openModal(card) {
@@ -368,6 +450,8 @@
     state.rarityFilter = null;
     state.query = "";
     els.searchInput.value = "";
+    els.boosterArena.hidden = true;
+    els.boosterBtn.textContent = "Rip Mystery Pack";
     location.hash = "";
     render();
   }
@@ -431,7 +515,7 @@
     render();
   });
 
-  /* ---------- ambient cursor glow ---------- */
+  /* ---------- ambient cursor & 3D parallax background ---------- */
 
   const ambientGlow = document.getElementById("ambient-glow");
   let glowQueued = false;
@@ -443,6 +527,13 @@
       const yPct = ((e.clientY / window.innerHeight) * 100).toFixed(1);
       ambientGlow.style.setProperty("--gx", `${xPct}%`);
       ambientGlow.style.setProperty("--gy", `${yPct}%`);
+
+      // Maps normalized offsets (-1 to 1) for background multi-plane 3D parallax
+      const px = ((e.clientX / window.innerWidth) - 0.5) * 2;
+      const py = ((e.clientY / window.innerHeight) - 0.5) * 2;
+      document.documentElement.style.setProperty("--px", px.toFixed(3));
+      document.documentElement.style.setProperty("--py", py.toFixed(3));
+
       glowQueued = false;
     });
   });

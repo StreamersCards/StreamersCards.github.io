@@ -38,7 +38,7 @@
 </header>
 
 <main id="app">
-  <!-- HOME VIEW: collection tiles -->
+  <!-- HOME VIEW: collection tiles and booster station -->
   <section id="home-view" class="view">
     <div class="hero">
       <h1>Streamers Cards <span class="hero-accent">Revealed Cards Only.</span></h1>
@@ -47,6 +47,25 @@
         <div><span class="num" id="stat-cards">0</span><span class="lbl">Cards Found</span></div>
         <div><span class="num" id="stat-collections">0</span><span class="lbl">Collections</span></div>
         <div><span class="num" id="stat-rarities">0</span><span class="lbl">Rarity tiers</span></div>
+      </div>
+    </div>
+
+    <!-- 3D BOOSTER PACK STATION -->
+    <div class="booster-station">
+      <div class="booster-header">
+        <h2 class="section-label">Booster Pack Station</h2>
+        <button class="booster-action-btn" id="booster-action-btn">Rip Mystery Pack</button>
+      </div>
+      <div class="booster-arena" id="booster-arena" hidden>
+        <div class="booster-pack" id="booster-pack">
+          <div class="pack-foil">
+            <div class="pack-badge">SC</div>
+            <div class="pack-logo">STREAMER<em>CARDS</em></div>
+            <div class="pack-sub">3 COLLECTOR PULLS</div>
+            <div class="pack-laser-line"></div>
+          </div>
+        </div>
+        <div class="booster-results" id="booster-results" hidden></div>
       </div>
     </div>
 
