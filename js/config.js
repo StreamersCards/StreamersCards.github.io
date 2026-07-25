@@ -59,9 +59,9 @@ const RARITIES = {
    ------------------------------------------------------------ */
 const COLLECTIONS = [
   {
-    id: "launch-series",
+    id: "Revealed-Cards",
     name: "Launch Series",
-    tagline: "The first drop. Where every collection starts.",
+    tagline: "All cards revealed so far. More to come.",
     cover: "images/covers/launch-series.png",
     accent: "#4C8DFF",
     cards: [
